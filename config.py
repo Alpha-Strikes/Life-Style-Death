@@ -1,0 +1,1 @@
+DATASET_URL = "https://raw.githubusercontent.com/MoazEmad1/Dataset/refs/heads/main/Updated%20Quality%20of%20Life%20Data.csv"
