@@ -4,11 +4,10 @@ import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from scipy import stats
 import statsmodels.api as sm
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
+from sklearn.preprocessing import PolynomialFeatures
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import DATASET_URL
 
@@ -19,7 +18,7 @@ def train_ols_model(data_url: str = DATASET_URL, test_size: float = 0.2, random_
     print("=" * 60)
     print("OLS REGRESSION MODEL")
     print("=" * 60)
-    
+
     print("\n1. Loading and preparing data...")
     df = scrape_data_from_webpage(data_url)
     X_train, X_test, y_train, y_test, feature_names = train_test_split_encoded(
@@ -27,25 +26,30 @@ def train_ols_model(data_url: str = DATASET_URL, test_size: float = 0.2, random_
     )
     print(f"   Training set: {X_train.shape[0]} samples, {X_train.shape[1]} features")
     print(f"   Test set: {X_test.shape[0]} samples")
-    
 
-    
-    print("\n2. Fitting OLS model...")
+    print("\n2. Feature engineering...")
     X_train = X_train.astype(np.float64)
     X_test = X_test.astype(np.float64)
     y_train = y_train.astype(np.float64)
     y_test = y_test.astype(np.float64)
-    
-    #for statsmodels OLS, we need to add an intercept term
+
+    print("   Adding squared terms and interaction terms (degree=2)...")
+    poly = PolynomialFeatures(degree=2, include_bias=False, interaction_only=False)
+    X_train = poly.fit_transform(X_train)
+    X_test = poly.transform(X_test)
+    print(f"   Features after polynomial expansion: {X_train.shape[1]}")
+
+    print("\n3. Fitting OLS model (statsmodels)...")
     X_train_with_intercept = sm.add_constant(X_train, has_constant='add')
     X_test_with_intercept = sm.add_constant(X_test, has_constant='add')
     
     #fit OLS model
     model = sm.OLS(y_train, X_train_with_intercept).fit()
-    
+
     #get predictions
     y_train_pred = model.predict(X_train_with_intercept)
     y_test_pred = model.predict(X_test_with_intercept)
+    summary_text = str(model.summary())
     
     #calculate metrics
     train_mae = mean_absolute_error(y_train, y_train_pred)
@@ -64,11 +68,10 @@ def train_ols_model(data_url: str = DATASET_URL, test_size: float = 0.2, random_
         "test_r2": test_r2,
     }
     
-    print("\n3. Model Summary:")
-    print(model.summary())
-    summary_text = str(model.summary())
+    print("\n4. Model Summary:")
+    print(summary_text)
     
-    print("\n4. Performance Metrics:")
+    print("\n5. Performance Metrics:")
     print(f"   Training Set:")
     print(f"      MAE:  {train_mae:.2f} years")
     print(f"      RMSE: {train_rmse:.2f} years")
@@ -101,17 +104,17 @@ def plot_ols_diagnostics(results: dict, output_dir: str = "figures"):
     y_test = results["y_test"]
     y_train_pred = results["y_train_pred"]
     y_test_pred = results["y_test_pred"]
-    
+
     #get residuals
     residuals_train = y_train - y_train_pred
-    residuals_test = y_test - y_test_pred
-    
+
     #get standardized residuals and leverage (for additional diagnostic plots)
     influence = model.get_influence()
     standardized_residuals = influence.resid_studentized_internal
     leverage = influence.hat_matrix_diag
+    n_params = len(model.params)
     
-    print("\n5. Generating diagnostic plots...")
+    print("\n6. Generating diagnostic plots...")
     
     # 1. Residuals vs Fitted (Training)
     plt.figure(figsize=(8, 6))
@@ -187,9 +190,9 @@ def plot_ols_diagnostics(results: dict, output_dir: str = "figures"):
     
     #add Cook's distance contours(common thresholds: 0.5& 1.0)
     #Cook's distance= (standardized_residuals^2 *leverage)/(no. of parameters*(1- leverage))
-    n_params = len(model.params)
     cook_threshold = 0.5
-    leverage_range = np.linspace(leverage.min(), leverage.max(), 100)
+    lev_min, lev_max = leverage.min(), leverage.max()
+    leverage_range = np.linspace(max(lev_min, 1e-6), min(lev_max, 1 - 1e-6), 100)
     cook_contour_05 = np.sqrt(cook_threshold * n_params * (1 - leverage_range) / leverage_range)
     cook_contour_10 = np.sqrt(1.0 * n_params * (1 - leverage_range) / leverage_range)
     
@@ -266,7 +269,7 @@ def save_ols_results(results: dict, output_dir: str = "outputs"):
         f.write(f"  RMSE: {metrics['test_rmse']:.2f} years\n")
         f.write(f"  R²:   {metrics['test_r2']:.4f}\n")
     
-    print(f"\n6. Saved results to {output_dir}/ols_summary.txt")
+    print(f"\n7. Saved results to {output_dir}/ols_summary.txt")
 
 
 def save_ols_model(results: dict, output_dir: str = "models", learning_base_dir: str = "learningBase"):
@@ -286,7 +289,7 @@ def save_ols_model(results: dict, output_dir: str = "models", learning_base_dir:
     with open(model_path, "wb") as f:
         pickle.dump(model_data, f)
     
-    print(f"7. Saved model to {output_dir}/currentOlsSolution.pkl")
+    print(f"8. Saved model to {output_dir}/currentOlsSolution.pkl")
     
     #save performance metrics to learningBase
     metrics = results["metrics"]
@@ -306,7 +309,7 @@ def save_ols_model(results: dict, output_dir: str = "models", learning_base_dir:
     print(f"   Saved performance metrics to {learning_base_dir}/ols_performance_metrics.txt")
 
 
-def load_ols_model(model_path: str = "models/ols_model.pkl"):
+def load_ols_model(model_path: str = "models/currentOlsSolution.pkl"):
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file not found: {model_path}")
     
@@ -328,7 +331,6 @@ def predict_with_ols_model(model_data: dict, X: np.ndarray):
 
 
 def run_ols_analysis(data_url: str = DATASET_URL):
-    #train model
     results = train_ols_model(data_url)
     
     #generate diagnostic plots

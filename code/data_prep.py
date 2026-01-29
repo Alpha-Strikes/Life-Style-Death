@@ -1,7 +1,6 @@
-import os
 import io
-import time
-from typing import Tuple, Optional
+import os
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -11,59 +10,32 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
-def scrape_data_from_webpage(page_url: str, max_retries: int = 3, retry_delay: int = 2) -> pd.DataFrame:
-    print(f"Scraping data from webpage: {page_url}")
-    
+def scrape_data_from_webpage(page_url: str) -> pd.DataFrame:
+    print(f"Scraping data from webpage (BeautifulSoup): {page_url}")
+
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
-    
-    #convert blob to raw immediately
-    if 'github.com' in page_url and '/blob/' in page_url:
-        raw_url = page_url.replace('/blob/', '/raw/')
-        print(f"GitHub blob URL detected. Converting to raw URL: {raw_url}")
-        page_url = raw_url
-    
-    #retry logic because of rate limiting
-    for attempt in range(max_retries):
-        try:
-            response = requests.get(page_url, headers=headers)
-            
-            if response.status_code == 429:
-                wait_time = retry_delay * (2 ** attempt)
-                print(f"Rate limited (429). Waiting {wait_time} seconds before retry {attempt + 1}/{max_retries}...")
-                time.sleep(wait_time)
-                continue
-            
-            response.raise_for_status()
-            
-            #read as CSV first because of raw URLs or direct CSV files
-            try:
-                df = pd.read_csv(io.StringIO(response.text))
-                print(f"Downloaded CSV: {len(df)} rows")
-                return df
-            except:
-                #scrape tables with BeautifulSoup if not CSV
-                soup = BeautifulSoup(response.content, 'lxml')
-                tables = soup.find_all('table')
-                
-                if tables:
-                    print(f"Found {len(tables)} table(s) on the page. Using the first table.")
-                    df = pd.read_html(str(tables[0]))[0]
-                    print(f"Scraped table with {len(df)} rows and {len(df.columns)} columns")
-                    return df
-                else:
-                    raise ValueError("No tables found on the webpage and content is not a valid CSV. Please provide a direct CSV URL or a page with a table.")
-                
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 429 and attempt < max_retries - 1:
-                wait_time = retry_delay * (2 ** attempt)
-                print(f"Rate limited (429). Waiting {wait_time} seconds before retry {attempt + 1}/{max_retries}...")
-                time.sleep(wait_time)
-                continue
-            raise
-    
-    raise Exception(f"Failed to scrape data {max_retries} (rate limited)")
+    response = requests.get(page_url, headers=headers)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, "lxml")
+    tables = soup.find_all("table")
+
+    df = pd.read_html(io.StringIO(str(tables[0])))[0]
+    #if header row was <td> not <th>, pandas uses first row as data → columns are 0,1,2,...
+    if "age_at_death" not in df.columns and len(df) > 0:
+        first_row = df.iloc[0].astype(str).str.strip().str.lower()
+        if "age_at_death" in first_row.values or "id" in first_row.values:
+            df.columns = [str(c).strip() for c in df.iloc[0]]
+            df = df.iloc[1:].reset_index(drop=True)
+            numeric_names = ["avg_work_hours_per_day", "avg_rest_hours_per_day", "avg_sleep_hours_per_day", "avg_exercise_hours_per_day", "age_at_death"]
+            for col in numeric_names:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors="coerce")
+    if len(df.columns) > 0 and (df.columns[0] in (0, "0", "Unnamed: 0") or str(df.columns[0]).startswith("Unnamed")):
+        df = df.drop(columns=df.columns[0], errors="ignore")
+    print(f"Scraped table: {len(df)} rows, {len(df.columns)} columns")
+    return df
 
 
 def clean_dataset(df: pd.DataFrame, drop_outliers: bool = True) -> pd.DataFrame:
@@ -185,6 +157,16 @@ def train_test_split_encoded(df:pd.DataFrame, test_size:float= 0.2, random_state
     y=df["age_at_death"].values
     X=df.drop(columns=["age_at_death"])
 
+    #derived lifestyle features from the data we have
+    hour_cols = ["avg_work_hours_per_day", "avg_rest_hours_per_day", "avg_sleep_hours_per_day", "avg_exercise_hours_per_day"]
+    if all(c in X.columns for c in hour_cols):
+        X = X.copy()
+        w, r, s, e = X["avg_work_hours_per_day"], X["avg_rest_hours_per_day"], X["avg_sleep_hours_per_day"], X["avg_exercise_hours_per_day"]
+        X["total_hours_per_day"] = w + r + s + e
+        X["active_hours"] = w + e  #work + exercise
+        X["rest_sleep_ratio"] = r / (s + 1e-6)  #to avoid division by zero
+        X["exercise_share"] = e / (w + e + 1e-6)  #exercise share of active time
+
     # one-hot encode gender, occupation_type (and any other object columns)
     X_encoded= pd.get_dummies(X, drop_first=True)
     feature_names=X_encoded.columns
@@ -197,7 +179,6 @@ if __name__ == "__main__":
     import sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from config import DATASET_URL
-    
     results = prepare_data_for_pdf(DATASET_URL)
     print("\n" + "=" * 60)
     print("DATA PREPARATION COMPLETE")
