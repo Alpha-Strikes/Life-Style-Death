@@ -2,9 +2,11 @@ FROM busybox
 
 WORKDIR /tmp
 
-RUN mkdir -p /tmp/activationBase
+RUN mkdir -p /tmp/learningBase/train \
+    -p /tmp/learningBase/validation
 
-COPY data/activation_data.csv /tmp/activationBase/
-COPY README.md /tmp/activationBase/Readme.md
+COPY data/training_data.csv /tmp/learningBase/train/
+COPY data/test_data.csv     /tmp/learningBase/validation/
+COPY README.md /tmp/learningBase/Readme.md
 
 CMD ["sh"]
