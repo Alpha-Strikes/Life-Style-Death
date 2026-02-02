@@ -102,6 +102,10 @@ def prepare_data_for_pdf(
     #load and clean data
     print("1. Loading and cleaning data...")
     df_raw = scrape_data_from_webpage(data_url)
+
+    # Handle categorical variables (gender and occupation_type) with one-hot encoding
+    df_raw = pd.get_dummies(df_raw, columns=['gender', 'occupation_type'], drop_first=True)
+
     df_clean = clean_dataset(df_raw, drop_outliers=True)
     print(f"   Cleaned dataset: {len(df_clean)} rows")
     

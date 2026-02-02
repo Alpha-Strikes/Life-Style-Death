@@ -2,11 +2,11 @@ OLS MODEL PERFORMANCE METRICS
 ============================================================
 
 Training Set:
-  MAE:  6.2400 years
-  RMSE: 7.7726 years
-  RÂ²:   0.3012
+  MAE:  6.2266 years
+  RMSE: 7.7528 years
+  R²:   0.3047
 
 Test/Validation Set:
-  MAE:  6.2356 years
-  RMSE: 7.7066 years
-  RÂ²:   0.2676
+  MAE:  6.2301 years
+  RMSE: 7.6946 years
+  R²:   0.2699
