@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
+
 def scrape_data_from_webpage(page_url: str) -> pd.DataFrame:
     print(f"Scraping data from webpage (BeautifulSoup): {page_url}")
 
@@ -102,52 +103,58 @@ def prepare_data_for_pdf(
     #load and clean data
     print("1. Loading and cleaning data...")
     df_raw = scrape_data_from_webpage(data_url)
-
-    # Handle categorical variables (gender and occupation_type) with one-hot encoding
-    df_raw = pd.get_dummies(df_raw, columns=['gender', 'occupation_type'], drop_first=True)
-
     df_clean = clean_dataset(df_raw, drop_outliers=True)
     print(f"   Cleaned dataset: {len(df_clean)} rows")
-    
-    #normalize data
-    print("2. Normalizing data...")
-    df_normalized, scaler = normalize_dataset(df_clean)
-    
-    #save joint_data_collection.csv
+
+    #encode (derived features + one-hot) and split
+    print("2. Encoding and splitting (saving encoded datasets)...")
+    train_encoded, test_encoded, feature_names = _encode_and_split(
+        df_clean, test_size=test_size, random_state=random_state
+    )
+    encoded_train_path = os.path.join(output_dir, "training_data_encoded.csv")
+    encoded_test_path = os.path.join(output_dir, "test_data_encoded.csv")
+    feature_names_path = os.path.join(output_dir, "feature_names.csv")
+    train_encoded.to_csv(encoded_train_path, index=False)
+    test_encoded.to_csv(encoded_test_path, index=False)
+    pd.Series(feature_names.tolist()).to_csv(feature_names_path, index=False, header=False)
+    print(f"   Saved {encoded_train_path} ({len(train_encoded)} rows)")
+    print(f"   Saved {encoded_test_path} ({len(test_encoded)} rows)")
+    print(f"   Saved {feature_names_path} ({len(feature_names)} features)")
+
+    #normalize encoded data and save
+    print("3. Normalizing data...")
+    scaler = StandardScaler()
+    X_train = train_encoded.drop(columns=["age_at_death"])
+    X_test = test_encoded.drop(columns=["age_at_death"])
+    X_train_norm = scaler.fit_transform(X_train)
+    X_test_norm = scaler.transform(X_test)
+    train_df = pd.DataFrame(X_train_norm, columns=X_train.columns)
+    train_df["age_at_death"] = train_encoded["age_at_death"].values
+    test_df = pd.DataFrame(X_test_norm, columns=X_test.columns)
+    test_df["age_at_death"] = test_encoded["age_at_death"].values
+    df_normalized = pd.concat([train_df, test_df], ignore_index=True)
     joint_data_path = os.path.join(output_dir, "joint_data_collection.csv")
     df_normalized.to_csv(joint_data_path, index=False)
-    print(f"3. Saved joint_data_collection.csv: {joint_data_path}")
-    
-    #split into train/test (80/20)
-    print("4. Splitting into train/test sets...")
-    train_df, test_df = train_test_split(
-        df_normalized,
-        test_size=test_size,
-        random_state=random_state
-    )
-    
-    #save training_data.csv (80%)
     training_data_path = os.path.join(output_dir, "training_data.csv")
-    train_df.to_csv(training_data_path, index=False)
-    print(f"   Saved training_data.csv: {training_data_path} ({len(train_df)} rows, {len(train_df)/len(df_normalized)*100:.1f}%)")
-    
-    #save test_data.csv (20%)
     test_data_path = os.path.join(output_dir, "test_data.csv")
+    train_df.to_csv(training_data_path, index=False)
     test_df.to_csv(test_data_path, index=False)
-    print(f"   Saved test_data.csv: {test_data_path} ({len(test_df)} rows, {len(test_df)/len(df_normalized)*100:.1f}%)")
-    
-    #create activation_data.csv (1 entry from test)
+    print(f"4. Saved joint_data_collection.csv, training_data.csv, test_data.csv")
+
     print("5. Creating activation_data.csv...")
-    activation_df = test_df.iloc[[0]]  # Take first entry from test set
+    activation_df = test_encoded.iloc[[0]]
     activation_data_path = os.path.join(output_dir, "activation_data.csv")
     activation_df.to_csv(activation_data_path, index=False)
-    print(f"   Saved activation_data.csv: {activation_data_path} (1 row)")
-    
+    print(f"   Saved activation_data.csv (1 row)")
+
     return {
         "joint_data_path": joint_data_path,
         "training_data_path": training_data_path,
         "test_data_path": test_data_path,
         "activation_data_path": activation_data_path,
+        "encoded_train_path": encoded_train_path,
+        "encoded_test_path": encoded_test_path,
+        "feature_names_path": feature_names_path,
         "scaler": scaler,
         "train_df": train_df,
         "test_df": test_df,
@@ -155,27 +162,53 @@ def prepare_data_for_pdf(
     }
 
 
-def train_test_split_encoded(df:pd.DataFrame, test_size:float= 0.2, random_state:int =42)->Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, pd.Index]:
-    df=clean_dataset(df)
+def _encode_and_split(
+    df: pd.DataFrame,
+    test_size: float = 0.2,
+    random_state: int = 42,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Index]:
+    """derived features, one-hot encode, split"""
+    y = df["age_at_death"]
+    X = df.drop(columns=["age_at_death"])
 
-    y=df["age_at_death"].values
-    X=df.drop(columns=["age_at_death"])
-
-    #derived lifestyle features from the data we have
     hour_cols = ["avg_work_hours_per_day", "avg_rest_hours_per_day", "avg_sleep_hours_per_day", "avg_exercise_hours_per_day"]
     if all(c in X.columns for c in hour_cols):
         X = X.copy()
-        w, r, s, e = X["avg_work_hours_per_day"], X["avg_rest_hours_per_day"], X["avg_sleep_hours_per_day"], X["avg_exercise_hours_per_day"]
+        w = X["avg_work_hours_per_day"]
+        r = X["avg_rest_hours_per_day"]
+        s = X["avg_sleep_hours_per_day"]
+        e = X["avg_exercise_hours_per_day"]
         X["total_hours_per_day"] = w + r + s + e
-        X["active_hours"] = w + e  #work + exercise
-        X["rest_sleep_ratio"] = r / (s + 1e-6)  #to avoid division by zero
-        X["exercise_share"] = e / (w + e + 1e-6)  #exercise share of active time
+        X["active_hours"] = w + e
+        X["rest_sleep_ratio"] = r / (s + 1e-6)
+        X["exercise_share"] = e / (w + e + 1e-6)
 
-    # one-hot encode gender, occupation_type (and any other object columns)
-    X_encoded= pd.get_dummies(X, drop_first=True)
-    feature_names=X_encoded.columns
-    X_train, X_test, y_train, y_test = train_test_split(X_encoded.values, y, test_size=test_size, random_state=random_state)
+    X_encoded = pd.get_dummies(X, drop_first=True)
+    feature_names = X_encoded.columns
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_encoded, y, test_size=test_size, random_state=random_state
+    )
+    train_encoded = X_train.copy()
+    train_encoded["age_at_death"] = y_train.values
+    test_encoded = X_test.copy()
+    test_encoded["age_at_death"] = y_test.values
+    return train_encoded, test_encoded, feature_names
 
+
+def load_encoded_datasets(
+    encoded_train_path: str = "data/training_data_encoded.csv",
+    encoded_test_path: str = "data/test_data_encoded.csv",
+    feature_names_path: str = "data/feature_names.csv",
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, pd.Index]:
+    """load encoded train/test datasets and feature names"""
+    train_df = pd.read_csv(encoded_train_path)
+    test_df = pd.read_csv(encoded_test_path)
+    fn_df = pd.read_csv(feature_names_path, header=None)
+    feature_names = pd.Index(fn_df.iloc[:, 0].astype(str).tolist())
+    X_train = train_df.drop(columns=["age_at_death"]).values
+    X_test = test_df.drop(columns=["age_at_death"]).values
+    y_train = train_df["age_at_death"].values
+    y_test = test_df["age_at_death"].values
     return X_train, X_test, y_train, y_test, feature_names
 
 
@@ -188,6 +221,9 @@ if __name__ == "__main__":
     print("DATA PREPARATION COMPLETE")
     print("=" * 60)
     print(f"\nCreated files:")
+    print(f"  - {results['encoded_train_path']}")
+    print(f"  - {results['encoded_test_path']}")
+    print(f"  - {results['feature_names_path']}")
     print(f"  - {results['joint_data_path']}")
     print(f"  - {results['training_data_path']}")
     print(f"  - {results['test_data_path']}")
