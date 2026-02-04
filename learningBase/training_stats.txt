@@ -1,7 +1,8 @@
-Final train loss: 60.7750
-Final train MAE: 6.2549
-Final val loss: 68.5918
-Final val MAE: 6.6873
-Test loss (MSE): 60.5005
-Test MAE: 6.2722
-Number of training epochs: 30
+Final train loss: 62.0629
+Final train MAE: 6.3319
+Final val loss: 69.2988
+Final val MAE: 6.7490
+Test loss (MSE): 62.1531
+Test MAE: 6.3545
+R2: 23.36
+Number of training epochs: 26

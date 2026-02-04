@@ -5,6 +5,6 @@ WORKDIR /tmp
 RUN mkdir -p /tmp/activationBase
 
 COPY data/activation_data.csv /tmp/activationBase/
-COPY README.md /tmp/activationBase/Readme.md
+COPY images/activationBase_life_style_death/Readme.md /tmp/activationBase/Readme.md
 
 CMD ["sh"]

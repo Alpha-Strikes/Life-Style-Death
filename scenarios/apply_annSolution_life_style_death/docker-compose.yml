@@ -1,0 +1,28 @@
+version: "3.8"
+
+volumes:
+  ai_system:
+    external: true
+
+services:
+
+  knowledgebase:
+    image: nathan2417/knowledgebase_lifestyledeath
+    container_name: knowledgebase_lifestyledeath
+    volumes:
+      - ai_system:/tmp
+
+  activationbase:
+    image: nathan2417/activationbase_lifestyledeath
+    container_name: activationbase_lifestyledeath
+    volumes:
+      - ai_system:/tmp
+
+  codebase:
+    image: nathan2417/codebase_lifestyledeath
+    container_name: codebase_lifestyledeath
+    volumes:
+      - ai_system:/tmp
+    depends_on:
+      - knowledgebase
+      - activationbase

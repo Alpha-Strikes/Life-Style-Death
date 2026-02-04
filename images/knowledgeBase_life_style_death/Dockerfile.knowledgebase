@@ -1,0 +1,13 @@
+FROM busybox
+
+# Store model OUTSIDE /tmp (safe from volume masking)
+WORKDIR /models
+COPY models/currentAiSolution_INFERENCE.keras .
+COPY images/knowledgeBase_life_style_death/Readme.md .
+
+# Add entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["sh"]

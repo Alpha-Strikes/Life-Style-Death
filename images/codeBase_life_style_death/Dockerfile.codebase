@@ -1,0 +1,12 @@
+FROM tensorflow/tensorflow:2.20.0
+
+WORKDIR /app
+# Install runtime deps
+RUN pip install --no-cache-dir pandas numpy scikit-learn
+
+RUN mkdir -p /app/codeBase
+
+COPY images/codeBase_life_style_death/run_inference.py /app/codeBase/
+COPY images/codeBase_life_style_death/Readme.md /app/codeBase/
+
+CMD ["python", "/app/codeBase/run_inference.py"]

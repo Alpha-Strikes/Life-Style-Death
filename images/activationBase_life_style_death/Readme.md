@@ -1,0 +1,22 @@
+# ActivationBase – Life Style Death
+
+## Ownership
+
+- Student Name 1: Moaz Hussein - GitHub: MoazEmad1
+- Student Name 2: Nathan Fernandes - GitHub: Alpha-Strikes
+
+This repository is part of the course 'M. Grum: Advanced AI-based Application Systems' and follows the project structure requirements from the AI-CPS repository.
+
+## Institution
+
+Junior Chair for Business Information Science,  
+esp. AI-based Application Systems  
+University of Potsdam
+
+## Content
+
+This image contains the activation data for the Artificial Neural Network (ANN).
+
+## License
+
+This project is committed to the **AGPL-3.0 license** as required by the course.
