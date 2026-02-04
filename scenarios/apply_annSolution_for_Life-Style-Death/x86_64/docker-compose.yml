@@ -1,0 +1,29 @@
+version: "3.8"
+
+volumes:
+  ai_system:
+
+services:
+  #provides the trained ANN / OLS models in /tmp/knowledgeBase/
+  knowledgebase:
+    image: moazemad/knowledgebase_life_style_death_x86_64
+    volumes:
+      - ai_system:/tmp
+
+  # provides training / test data (if needed for re‑evaluation)
+  learningbase:
+    image: moazemad/learningbase_life_style_death_x86_64
+    volumes:
+      - ai_system:/tmp
+
+  # provides activation_data.csv
+  activationbase:
+    image: moazemad/activationbase_life_style_death_x86_64
+    volumes:
+      - ai_system:/tmp
+
+  # provides activation_data.csv as “code base”
+  codebase:
+    image: moazemad/codebase_life_style_death_x86_64
+    volumes:
+      - ai_system:/tmp

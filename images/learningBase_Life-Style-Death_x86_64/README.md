@@ -1,0 +1,7 @@
+- **Owners**: Moaz Hussein, Nathan Fernandes
+- **Course**: Created as part of “M. Grum: Advanced AI-based Application Systems” by the Junior Chair for Business Information Science, esp. AI-based Application Systems, University of Potsdam.
+- **Content (knowledge base)**:
+  - TensorFlow ANN model: `/tmp/knowledgeBase/currentAiSolution.h5`
+  - Statsmodels OLS model: `/tmp/knowledgeBase/currentOlsSolution.pkl`
+- **Model description**: Both models predict human age at death from life-style features (work, rest, sleep, and exercise hours plus derived ratios), trained on the same dataset used in this project.
+- **License**: The contents of this image are provided under the **AGPL-3.0** license.

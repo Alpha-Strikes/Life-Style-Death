@@ -596,7 +596,7 @@ Experiments and publications about this are in progress.
 
 ## Ownership
 
-**Project Team**: [Add your name(s) and GitHub username(s) here]
+**Project Team**: 
 
 - Student Name 1: Moaz Hussein - GitHub: MoazEmad1
 - Student Name 2: Nathan Fernandes - GitHub: Alpha-Strikes
