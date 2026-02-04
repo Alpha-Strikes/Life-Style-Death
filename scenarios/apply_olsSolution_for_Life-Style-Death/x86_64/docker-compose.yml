@@ -9,21 +9,28 @@ services:
     image: moazemad/knowledgebase_life_style_death_x86_64
     volumes:
       - ai_system:/tmp
+    command: ["sh", "-c", "rm -rf /tmp/knowledgeBase && mkdir -p /tmp/knowledgeBase && cp -r /knowledgeBase/* /tmp/knowledgeBase/"]
 
   # provides training / test data (if needed for re‑evaluation)
   learningbase:
     image: moazemad/learningbase_life_style_death_x86_64
     volumes:
       - ai_system:/tmp
+    command: ["sh", "-c", "rm -rf /tmp/learningBase && mkdir -p /tmp/learningBase && cp -r /learningBase/* /tmp/learningBase/"]
 
   # provides activation_data.csv
   activationbase:
     image: moazemad/activationbase_life_style_death_x86_64
     volumes:
       - ai_system:/tmp
+    command: ["sh", "-c", "rm -rf /tmp/acGvaGonBase && mkdir -p /tmp/acGvaGonBase && cp -r /acGvaGonBase/* /tmp/acGvaGonBase/"]
 
   # provides activation_data.csv as “code base”
   codebase:
     image: moazemad/codebase_life_style_death_x86_64
     volumes:
       - ai_system:/tmp
+    depends_on:
+      - knowledgebase
+      - activationbase
+    command: ["sh", "-c", "rm -rf /tmp/acGvaGonBase && mkdir -p /tmp/acGvaGonBase && cp -r /acGvaGonBase/* /tmp/acGvaGonBase/ && python /app/codeBase/run_inference.py"]

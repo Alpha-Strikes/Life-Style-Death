@@ -9,22 +9,20 @@ import statsmodels.api as sm
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import PolynomialFeatures
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import DATASET_URL
 
-from data_prep import load_encoded_datasets
+from data_prep import scrape_data_from_webpage, train_test_split_encoded
 
 
-def train_ols_model(
-    encoded_train_path: str = "data/training_data_encoded.csv",
-    encoded_test_path: str = "data/test_data_encoded.csv",
-    feature_names_path: str = "data/feature_names.csv",
-):
+def train_ols_model(data_url: str = DATASET_URL, test_size: float = 0.2, random_state: int = 42):
     print("=" * 60)
     print("OLS REGRESSION MODEL")
     print("=" * 60)
 
-    print("\n1. Loading encoded data (run data_prep.py first to generate)...")
-    X_train, X_test, y_train, y_test, feature_names = load_encoded_datasets(
-        encoded_train_path, encoded_test_path, feature_names_path
+    print("\n1. Loading and preparing data...")
+    df = scrape_data_from_webpage(data_url)
+    X_train, X_test, y_train, y_test, feature_names = train_test_split_encoded(
+        df, test_size=test_size, random_state=random_state
     )
     print(f"   Training set: {X_train.shape[0]} samples, {X_train.shape[1]} features")
     print(f"   Test set: {X_test.shape[0]} samples")
@@ -335,8 +333,8 @@ def predict_with_ols_model(model_data: dict, X: np.ndarray):
     return predictions
 
 
-def run_ols_analysis():
-    results = train_ols_model()
+def run_ols_analysis(data_url: str = DATASET_URL):
+    results = train_ols_model(data_url)
     
     #generate diagnostic plots
     plot_ols_diagnostics(results)

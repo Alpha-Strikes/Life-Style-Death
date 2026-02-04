@@ -608,7 +608,7 @@ This repository is part of the course 'M. Grum: Advanced AI-based Application Sy
 This project predicts age at death based on lifestyle factors (work hours, rest hours, sleep hours, exercise hours) and occupation type. The Data for this project is scrapped from kaggle https://www.kaggle.com/datasets/oluwatosinadewale/quality-of-life-data. It implements:
 
 - **OLS Regression** (Statsmodels) for baseline comparison
-- **PyBrain Neural Network** (ANN-based) for non-linear modeling
+- **TensorFlow/Keras ANN** for non-linear modeling
 - **Data scraping** from a GitHub repository
 - **Docker containerization** for model deployment
 
@@ -621,14 +621,14 @@ Current structure (aligned with AI-CPS repository):
   - `data_prep.py` – loading, cleaning, train/test split helpers
   - `eda.py` – exploratory data analysis and visualizations
   - `ols_model.py` – OLS regression training & evaluation
-  - `pybrain_model.py` – PyBrain neural network regressor (to be implemented)
+  - `ann_model.py` – TensorFlow/Keras ANN regressor for age-at-death
   - `annRequests_PyBrain/` – PyBrain ANN request handlers (from AI-CPS)
   - `annRequests_TensorFlow/` – TensorFlow ANN request handlers (from AI-CPS)
   - `experiments/` – experiment scripts (from AI-CPS)
   - `messageClient/` – MQTT communication client (from AI-CPS)
 - `figures/` – saved plots (diagnostic plots, scatter plots, training curves)
 - `outputs/` – metrics, logs, and model summaries
-- `models/` – saved models (`currentOlsSolution.pkl`, `currentAiSolution.xml`)
+- `models/` – saved models (`currentOlsSolution.pkl`, `currentAiSolution.h5`)
 - `learningBase/` – training/validation performance metrics and visualizations
 - `data/` – processed datasets:
   - `joint_data_collection.csv` – cleaned and normalized dataset
@@ -676,18 +676,18 @@ This:
 - Saves model as `models/currentOlsSolution.pkl`
 - Saves performance metrics to `learningBase/`
 
-### 4. Run PyBrain Model (Subgoal 4)
+### 4. Run ANN Model (Subgoal 4)
 
 ```bash
 cd code
-python pybrain_model.py
+python ann_model.py
 ```
 
 This:
 
-- Trains PyBrain ANN model
+- Trains TensorFlow/Keras ANN model
 - Generates training/testing curves, diagnostic plots, scatter plots
-- Saves model as `models/currentAiSolution.xml`
+- Saves model as `models/currentAiSolution.h5`
 - Saves performance metrics to `learningBase/`
 
 ## License

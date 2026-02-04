@@ -5,6 +5,7 @@
   by the Junior Chair for Business Information Science, esp. AI-based Application Systems,
   University of Potsdam.
 - **Content**:
-  - `/tmp/acGvaGonBase/activation_data.csv` – example activation input for applying
-    the life-style–based age-at-death prediction models.
+  - `/tmp/knowledgeBase/currentAiSolution.h5` – trained TensorFlow/Keras ANN (regression) for age-at-death from lifestyle features.
+  - `/tmp/knowledgeBase/currentOlsSolution.pkl` – trained Statsmodels OLS model (with polynomial features) for the same task.
+- **Short characterization of the AI model**: Feedforward ANN (Dense layers, ReLU, regression output) trained on normalized lifestyle and occupation features to predict age at death; OLS provides a linear baseline with polynomial terms. Both models are trained on the same joint_data_collection / training_data pipeline.
 - **License**: The contents of this image are provided under the **AGPL-3.0** license.

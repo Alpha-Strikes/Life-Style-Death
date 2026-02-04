@@ -1,7 +1,5 @@
+# syntax=docker/dockerfile:1
 FROM busybox
-
-WORKDIR /tmp
-RUN mkdir -p /tmp/acGvaGonBase
-
-COPY data/activation_data.csv /tmp/acGvaGonBase/activation_data.csv
+RUN mkdir -p /acGvaGonBase
+COPY data/activation_data.csv /acGvaGonBase/activation_data.csv
 COPY images/activationBase_Life-Style-Death_x86_64/README.md /README.md
