@@ -1,3 +1,5 @@
+#ARM64 (aarch64) variant. Runs on Apple Silicon or other ARM hosts.
+#builds and pushes codeBase for aarch64 as codebase_life_style_death_aarch64.
 version: "3.9"
 services:
   knowledge_base:
@@ -28,7 +30,8 @@ services:
       - |
         rm -rf /tmp/acGvaGonBase/ && cp -r /acGvaGonBase/ /tmp/;
   code_base:
-    image: moazemad/codebase_life_style_death_x86_64
+    user: root
+    image: moazemad/codebase_life_style_death_aarch64
     volumes:
       - ai_system:/tmp
     depends_on:

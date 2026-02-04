@@ -1,4 +1,6 @@
-version: "3.9"
+#GPU variant: requires NVIDIA Container Toolkit. Compose file version 2.3 is required for 'runtime: nvidia'.
+#uses the same x86_64 codeBase image; TensorFlow will use GPU when available. For a dedicated GPU
+version: "2.3"
 services:
   knowledge_base:
     image: moazemad/knowledgebase_life_style_death_x86_64
@@ -29,6 +31,7 @@ services:
         rm -rf /tmp/acGvaGonBase/ && cp -r /acGvaGonBase/ /tmp/;
   code_base:
     image: moazemad/codebase_life_style_death_x86_64
+    runtime: nvidia
     volumes:
       - ai_system:/tmp
     depends_on:
