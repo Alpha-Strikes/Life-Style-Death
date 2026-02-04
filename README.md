@@ -114,5 +114,3 @@ The project includes Docker images for model deployment:
 - `activationBase_yourIndividualProjektTitle` – activation data
 - `knowledgeBase_yourIndividualProjektTitle` – trained models
 - `codeBase_yourIndividualProjektTitle` – model code
-
-See `PDF_REQUIREMENTS_CHECKLIST.md` for detailed progress tracking.
