@@ -70,7 +70,7 @@ with open("learningBase/training_stats.txt", "w") as f:
     f.write(f"Final val MAE: {history.history['val_mae'][-1]:.4f}\n")
     f.write(f"Test loss (MSE): {test_loss:.4f}\n")
     f.write(f"Test MAE: {test_mae:.4f}\n")
-    f.write(f"Number of training epochs: {len(history.history["loss"])}\n")
+    f.write(f"Number of training epochs: {len(history.history['loss'])}\n")
 
 
 # loss curves

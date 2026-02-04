@@ -3,7 +3,7 @@ FROM tensorflow/tensorflow:latest
 
 WORKDIR /app
 #install runtime deps
-RUN pip install --no-cache-dir pandas numpy scikit-learn
+RUN pip install --no-cache-dir pandas numpy scikit-learn statsmodels
 
 #create directories for code and activation data
 RUN mkdir -p /app/codeBase /acGvaGonBase

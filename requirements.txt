@@ -7,4 +7,5 @@ scikit-learn
 requests
 beautifulsoup4
 lxml
+tensorflow>=2.10
 
